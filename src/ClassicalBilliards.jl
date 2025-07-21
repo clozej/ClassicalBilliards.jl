@@ -9,7 +9,6 @@ using Roots
 using BilliardGeometry
 #using Makie
 #using SavingPlotting
-
 include("particles/particles.jl")
 include("dynamics/dynamics.jl")
 

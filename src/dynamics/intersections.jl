@@ -14,7 +14,6 @@ end
 
 function find_intersection_times(particle, curve, exit_time)
     #time since last bounce
-    println("generic_times")
     let
         r(t) = domain_fun(curve, propagate(particle, t))
         t = find_zeros(r, (0.0+1e-14, exit_time)) #10.0*eps(exit_time)
@@ -35,9 +34,25 @@ function find_intersection_times(particle::P, line::C, exit_time) where {P<:Poin
     end
 end
 
+function find_intersection_times(particle::P, circle::C, exit_time) where {P<:PointParticle, C<:CircleSegment}
+    #time since last bounce
+    let R = circle.radius, cent = circle.center, r = particle.r, v = particle.v
+        dx = r[1] - cent[1]
+        dy = r[2] - cent[2]
+        a = v[1]*v[1] + v[2]*v[2]
+        b = 2*(dx*v[1] + dy*v[2])
+        c = dx*dx + dy*dy - R*R
+        d = sqrt(b*b - 4*a*c)
+        if isapprox(c, zero(c))
+            t =  Vector{Float64}([-b/a])
+        else
+            t = Vector{Float64}([(d-b)/(2*a)])
+        end
+        return t
+    end
+end
 
-
-function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsParticle, D<:SimpleDomain}
+function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsParticle, D<:AbsSimpleDomain}
     #time since last bounce
     boundary = domain.boundary
     N =  length(boundary)
@@ -62,7 +77,6 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsPartic
     end 
     return exit_time, idx
 end
-
 
 function line_polar(r,v,theta)
     type = eltype(v)
@@ -112,11 +126,11 @@ function determine_brackets(r,v; eps=1e-12)
 end
 
 
-function find_intersection_angles(particle::PointParticle{T}, curve::PolarSegment{N,T,BC} ; eps=1e-12) where {N, T, BC}
+function find_intersection_angles(particle::PointParticle{T}, curve::C ; eps=1e-12) where {T, C<:AbsPolarCurve}
     #time since last bounce
-    let  r = particle.r, v = particle.v, R = curve.R, coef=curve.coef
+    let  r = particle.r, v = particle.v
         brackets = determine_brackets(r,v; eps)
-        fun(theta) = polar_radius(R,coef,theta) - line_polar(r,v,theta)
+        fun(theta) = polar_radius(curve,theta) - line_polar(r,v,theta)
         angles = Vector{eltype(r)}()
         for b in brackets
             angles1 = find_zeros(fun, b) #10.0*eps(exit_time)
@@ -126,8 +140,9 @@ function find_intersection_angles(particle::PointParticle{T}, curve::PolarSegmen
     end
 end 
 
-function find_intersection_times(particle::PointParticle{T}, curve::PolarSegment{N,T,BC}, exit_time) where {N, T, BC}
-    let  r = particle.r, v = particle.v, #R = curve.R, coef=curve.coef
+function find_intersection_times(particle::PointParticle{T}, curve::C, exit_time) where {T, C<:AbsPolarCurve}
+    #time since last bounce
+    let  r = particle.r, v = particle.v
         angles = find_intersection_angles(particle, curve)
         pt0 = particle.r
         pts_fun(phi) =  line_polar(r,v,phi) .* SVector{2,Float64}([cos(phi),sin(phi)])

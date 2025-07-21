@@ -14,7 +14,7 @@ function collision!(particle::P, curve::C, time) where {P<:PointParticle, C<:Abs
     particle.time += time
 end
 
-function iterate_bounce!(particle::P, billiard::B; dt = 1.0 ) where {P<:AbsParticle, B<:AbsBilliard}
+function iterate_bounce!(particle::P, billiard::B; dt = 1.0, full_domain=true) where {P<:AbsParticle, B<:AbsBilliard}
     if typeof(billiard.fundamental_domain) <: AbsSimpleDomain
         domain = billiard.fundamental_domain
     else
@@ -25,12 +25,19 @@ function iterate_bounce!(particle::P, billiard::B; dt = 1.0 ) where {P<:AbsParti
     #particle.curve_idx = idx
     collision!(particle, crv, collision_time)
     bc_type = typeof(crv.bc)
-    if bc_type <: Transparent || bc_type  <: ReflectionSymmetry
-        iterate_bounce!(particle, billiard; dt)
+
+    if full_domain
+        if bc_type <: Transparent || bc_type  <: ReflectionSymmetry
+            iterate_bounce!(particle, billiard; dt, full_domain)
+        end
+    else
+        if bc_type <: Transparent
+            iterate_bounce!(particle, billiard; dt, full_domain)
+        end
     end
 end
 
-function trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=false) where {P<:AbsParticle, B<:AbsBilliard}
+function trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=true) where {P<:AbsParticle, B<:AbsBilliard}
     let p = particle
         pts = Vector{typeof(p.r)}(undef,T+1)
         vel = Vector{typeof(p.v)}(undef,T+1)
@@ -42,7 +49,7 @@ function trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=fals
         #sym_ids[1] = p.sym_sector
         #println("0, r=$(p.r)")
         for i in 1:T
-            iterate_bounce!(p, billiard; dt)
+            iterate_bounce!(p, billiard; dt, full_domain)
             ##println("$i, r=$(p.r), dom_idx=$(p.subdomain)")
             if full_domain
                 id = p.sym_sector
