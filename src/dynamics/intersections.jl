@@ -78,20 +78,22 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsPartic
     return exit_time, idx
 end
 
-function line_polar(r,v,theta)
+function line_polar(r,v,theta,center)
+    pt = Translation(-center)(r)
     type = eltype(v)
     if v[1] == zero(type)
-        return @. r[1] / cos(theta)
+        return @. pt[1] / cos(theta)
     end
     if v[2] == zero(type)
-        return @. r[2] / sin(theta)
+        return @. pt[2] / sin(theta)
     end
-    return @. (v[2]*r[1] - v[1]*r[2])/(v[2]*cos(theta) - v[1]*sin(theta))
+    return @. (v[2]*pt[1] - v[1]*pt[2])/(v[2]*cos(theta) - v[1]*sin(theta))
 end
 
-function determine_brackets(r,v; eps=1e-12) 
-    dir = cross(r,v)
-    theta0 = atan(r[2],r[1])
+function determine_brackets(r,v,center; eps=1e-12) 
+    pt = Translation(-center)(r)
+    dir = cross(pt,v)
+    theta0 = atan(pt[2],pt[1])
     pole = atan(v[2],v[1])
     poles = rem2pi.([-pi, pole-pi, pole, pole+pi,  pi], RoundNearest)
     poles = sort(poles)
@@ -128,9 +130,9 @@ end
 
 function find_intersection_angles(particle::PointParticle{T}, curve::C ; eps=1e-12) where {T, C<:AbsPolarCurve}
     #time since last bounce
-    let  r = particle.r, v = particle.v
-        brackets = determine_brackets(r,v; eps)
-        fun(theta) = polar_radius(curve,theta) - line_polar(r,v,theta)
+    let  r = particle.r, v = particle.v, center = curve.center
+        brackets = determine_brackets(r,v,center; eps)
+        fun(theta) = polar_radius(curve,theta) - line_polar(r,v,theta,center)
         angles = Vector{eltype(r)}()
         for b in brackets
             angles1 = find_zeros(fun, b) #10.0*eps(exit_time)
@@ -142,11 +144,12 @@ end
 
 function find_intersection_times(particle::PointParticle{T}, curve::C, exit_time) where {T, C<:AbsPolarCurve}
     #time since last bounce
-    let  r = particle.r, v = particle.v
+    let  r = particle.r, v = particle.v, center = curve.center
         angles = find_intersection_angles(particle, curve)
         pt0 = particle.r
-        pts_fun(phi) =  line_polar(r,v,phi) .* SVector{2,Float64}([cos(phi),sin(phi)])
-        pts = pts_fun.(angles)
+        #pts_polar = [Polar(line_polar(r,v,phi,center),phi) for phi in angles]
+        #pts_polar = [Polar(polar_radius(curve,phi),phi) for phi in angles]
+        pts =[Translation(center)(CartesianFromPolar()(Polar(polar_radius(curve,phi),phi))) for phi in angles]
         #pts = line_polar.(r,v,angles)
         speed = norm(particle.v)
         return sort([hypot((pt-pt0)...)/speed for pt in pts])
