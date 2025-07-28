@@ -161,14 +161,16 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:PointPart
     boundary = domain.boundary
     times = find_intersection_times(particle, boundary[1], 100.0)
     if isempty(times)
-        return 0.0, 1
+        bounce_time = Inf64
+    else
+        bounce_time = times[1]
     end
-    bounce_time = times[1]
     idx  = 1
-    for (i,crv) in enumerate(boundary[2:end])
+    for i in 2:length(boundary)
+        crv = boundary[i]
         times = find_intersection_times(particle, crv, 100.0)
         t = times[1]
-        if t < bounce_time
+        if 1e-14 < t < bounce_time
             bounce_time = t
             idx = i
         end   
