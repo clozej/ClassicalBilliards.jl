@@ -104,8 +104,6 @@ function determine_brackets(r,v,center; eps=1e-12)
         end
     end
     poles = poles[unique]
-    println(poles)
-    println(theta0)
     #brackets = [(poles[1],poles[2]),(poles[2],poles[3]),(poles[3],poles[4])]
     if poles[1] <= theta0 <= poles[2]
         if dir > zero(dir)
