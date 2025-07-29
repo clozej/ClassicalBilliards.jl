@@ -107,19 +107,19 @@ function determine_brackets(r,v,center; eps=1e-12)
     println(poles)
     println(theta0)
     #brackets = [(poles[1],poles[2]),(poles[2],poles[3]),(poles[3],poles[4])]
-    if poles[1] < theta0 <= poles[2]
+    if poles[1] <= theta0 <= poles[2]
         if dir > zero(dir)
             brackets =  [(theta0 + eps, poles[2])]
         else
             brackets =  [(-1.0*pi, theta0 - eps), (poles[3],1.0*pi)]
         end
-    elseif poles[2] < theta0 <= poles[3]
+    elseif poles[2] <= theta0 <= poles[3]
         if dir > zero(dir)
             brackets =  [(theta0 + eps, poles[3])]
         else
             brackets =  [(poles[2], theta0 - eps)]
         end
-    elseif poles[3] < theta0 <= poles[4]
+    elseif poles[3] <= theta0 <= poles[4]
         if dir > zero(dir)
             brackets = [(theta0 + eps,1.0*pi),(-1.0*pi, poles[2])]
         else
