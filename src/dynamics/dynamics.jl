@@ -22,7 +22,7 @@ function iterate_bounce!(particle::P, billiard::B; dt = 1.0, full_domain=true) w
     end 
     collision_time, idx = find_intersection(particle, domain; dt)
     crv = domain.boundary[idx]
-    #particle.curve_idx = idx
+    particle.subsegment = idx
     collision!(particle, crv, collision_time)
     bc_type = typeof(crv.bc)
 
@@ -72,4 +72,16 @@ function trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=true
     end
 end
 
-export trajectory, iterate_bounce!, colission!
+function symbolic_trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=true) where {P<:AbsParticle, B<:AbsBilliard}
+    let p = particle
+        symbol = SVector{3,Int64}([particle.subsegment,particle.subdomain,particle.sym_sector])
+        sym_traj = [symbol]
+        for i in 1:T
+            iterate_bounce!(p, billiard; dt, full_domain)
+            push!(sym_traj,  SVector{3,Int64}([particle.subsegment,particle.subdomain,particle.sym_sector]))
+        end
+        return sym_traj
+    end
+end
+
+export trajectory, symbolic_trajectory, iterate_bounce!, colission!

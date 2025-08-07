@@ -59,10 +59,9 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsPartic
     inside, approx_exit_time = find_domain_exit_curves(particle, domain, dt) #d gives the curves that were exited
     
     exit_curves = boundary[.~inside]
-    crv_idx = collect(1:N)[.~inside]
-    idx = crv_idx[1]
+    idx = exit_curves[1].segment_id
     exit_time = approx_exit_time
-    for (i,crv) in enumerate(exit_curves)
+    for crv in exit_curves
         times = find_intersection_times(particle, crv, approx_exit_time)
         if  isempty(times)
             #println("Trajectory is broken at time $(particle.time)")
@@ -71,7 +70,7 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:AbsPartic
             t = times[1]
             if t < exit_time
                 exit_time = t
-                idx = crv_idx[i]
+                idx = crv.segment_id
             end
         end    
     end 
@@ -172,7 +171,7 @@ function find_intersection(particle::P, domain::D; dt = 0.1) where {P<:PointPart
         t = times[1]
         if 1e-14 < t < bounce_time
             bounce_time = t
-            idx = i
+            idx = crv.segment_id
         end   
     end 
     return bounce_time, idx
