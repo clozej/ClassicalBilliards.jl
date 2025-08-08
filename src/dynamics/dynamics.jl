@@ -84,4 +84,17 @@ function symbolic_trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_do
     end
 end
 
-export trajectory, symbolic_trajectory, iterate_bounce!, colission!
+function pb_trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=true) where {P<:AbsParticle, B<:AbsBilliard}
+    let p = particle
+        pb_pts = Vector{PoincareBirkhoff}(undef,T+1)
+        pb_pt = pb_coords(billiard, p.subsegment, p.subdomain, p.sym_sector, p.r, p.v)
+        pb_pts[1] = pb_pt
+        for i in 1:T
+            iterate_bounce!(p, billiard; dt, full_domain)
+            pb_pt = pb_coords(billiard, p.subsegment, p.subdomain, p.sym_sector, p.r, p.v)
+            pb_pts[i+1] =  pb_pt
+        end
+        return pb_pts
+    end
+end
+export trajectory, symbolic_trajectory, pb_trajectory, iterate_bounce!, colission!
