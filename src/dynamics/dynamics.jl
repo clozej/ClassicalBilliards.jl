@@ -87,6 +87,9 @@ end
 function pb_trajectory(particle::P, billiard::B, T::Int; dt = 1.0, full_domain=true) where {P<:AbsParticle, B<:AbsBilliard}
     let p = particle
         pb_pts = Vector{PoincareBirkhoff}(undef,T+1)
+        if p.subsegment == 0
+            iterate_bounce!(p, billiard; dt, full_domain)
+        end
         pb_pt = pb_coords(billiard, p.subsegment, p.subdomain, p.sym_sector, p.r, p.v)
         pb_pts[1] = pb_pt
         for i in 1:T
