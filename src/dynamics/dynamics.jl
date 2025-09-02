@@ -2,8 +2,6 @@ include("intersections.jl")
 export find_domain_exit_curves, find_intersection_times, find_intersection_angles, find_intersection, line_polar, determine_brackets
 include("colissionrules.jl")
 export collision_rule!
-include("pbcoordinates.jl")
-export invert_point
 
 function collision!(particle::P, curve::C, time) where {P<:PointParticle, C<:AbsCurve}
     r = propagate(particle, time) #colision point
