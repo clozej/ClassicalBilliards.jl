@@ -5,7 +5,7 @@ using StaticArrays
 
 #test stadium in fundamental domain
 @testset "Stadium billiard" begin
-    billiard = Stadium(0.5) 
+    billiard = StadiumBilliard(0.5) 
     p = PointParticle(1.0,0.6,-1.0,1.3;subdomain=1)
     T = 5
     pts, vel, ts  = trajectory(p,billiard,T; dt = 0.1, full_domain=false)
@@ -15,7 +15,7 @@ end
 
 #test mushroom in full domain
 @testset "Mushroom billiard" begin
-    billiard = Mushroom(0.85)
+    billiard = MushroomBilliard(0.85)
     p = PointParticle(0.5,0.6,-1.0,1.2;subdomain=1)
     T = 5
     pts, vel, ts  = trajectory(p,billiard,T; dt = 0.1, full_domain=true)
@@ -24,7 +24,7 @@ end
 end
 
 @testset "Limacon billiard" begin
-    billiard = Limacon(1.0)
+    billiard = LimaconBilliard(1.0)
     p = PointParticle(0.5,0.6,-1.0,1.2;subdomain=1)
     T = 5
     pts, vel, ts  = trajectory(p,billiard,T; dt = 0.1, full_domain=true)
